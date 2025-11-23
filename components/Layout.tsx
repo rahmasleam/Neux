@@ -1,0 +1,200 @@
+import React from 'react';
+import { NavLink, Link, useNavigate } from 'react-router-dom';
+import { LayoutDashboard, Newspaper, Rocket, Calendar, Mic, Mail, BarChart2, Users, UserCircle, Bell, LogIn, LogOut, Menu, X, Sparkles, Sun, Moon, Link as LinkIcon } from 'lucide-react';
+import { useApp } from '../context/AppContext';
+import { TRANSLATIONS } from '../constants';
+
+const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, language, toggleLanguage, logout, notificationsEnabled, toggleNotifications, theme, toggleTheme } = useApp();
+  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  const navigate = useNavigate();
+  const t = TRANSLATIONS[language];
+
+  const navItems = [
+    { to: '/', label: t.nav.latest, icon: Newspaper },
+    { to: '/startups', label: t.nav.startups, icon: Rocket },
+    { to: '/events', label: t.nav.events, icon: Calendar },
+    { to: '/podcasts', label: t.nav.podcasts, icon: Mic },
+    { to: '/newsletters', label: t.nav.newsletters, icon: Mail },
+    { to: '/market', label: t.nav.market, icon: BarChart2 },
+    { to: '/partners', label: t.nav.partners, icon: Users },
+    // Resources removed from nav as per request (available in code only)
+  ];
+
+  return (
+    <div className={`min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white transition-colors duration-200 ${language === 'ar' ? 'rtl' : 'ltr'}`} dir={language === 'ar' ? 'rtl' : 'ltr'}>
+      
+      {/* Navbar */}
+      <header className="sticky top-0 z-40 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 shadow-sm transition-colors duration-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            
+            {/* Logo */}
+            <div className="flex items-center">
+              <Link to="/" className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-nexus-600 rounded-lg flex items-center justify-center shadow-lg shadow-nexus-500/30">
+                  <LayoutDashboard className="text-white w-5 h-5" />
+                </div>
+                <span className="font-bold text-xl tracking-tight text-slate-800 dark:text-white">
+                  Nexus<span className="text-nexus-600 dark:text-nexus-400">Mena</span>
+                </span>
+              </Link>
+            </div>
+
+            {/* Desktop Nav */}
+            <nav className="hidden xl:flex space-x-1 space-x-reverse">
+              {navItems.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  className={({ isActive }) =>
+                    `px-3 py-2 rounded-md text-sm font-medium transition-colors mx-1 flex items-center gap-1 ${
+                      isActive 
+                      ? 'bg-nexus-50 dark:bg-nexus-900/50 text-nexus-600 dark:text-nexus-400' 
+                      : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white'
+                    }`
+                  }
+                >
+                  <item.icon className="w-4 h-4" />
+                  {item.label}
+                </NavLink>
+              ))}
+               <NavLink
+                  to="/ai-assistant"
+                  className={({ isActive }) =>
+                    `px-3 py-2 rounded-md text-sm font-medium transition-colors mx-1 flex items-center gap-1 ${
+                      isActive 
+                      ? 'bg-indigo-50 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400' 
+                      : 'text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30'
+                    }`
+                  }
+                >
+                  <Sparkles className="w-4 h-4" />
+                  {t.nav.aiAssistant}
+                </NavLink>
+            </nav>
+
+            {/* Actions */}
+            <div className="hidden md:flex items-center gap-3">
+              <button
+                onClick={toggleTheme}
+                className="p-2 text-slate-500 dark:text-slate-400 hover:text-nexus-600 dark:hover:text-nexus-400 transition-colors"
+                title="Toggle Theme"
+              >
+                {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+              </button>
+
+              <button 
+                onClick={toggleLanguage} 
+                className="p-2 text-slate-500 dark:text-slate-400 hover:text-nexus-600 dark:hover:text-nexus-400 transition-colors"
+                title="Switch Language"
+              >
+                <span className="font-bold text-xs border border-slate-300 dark:border-slate-600 rounded px-1">{language === 'en' ? 'AR' : 'EN'}</span>
+              </button>
+              
+              <button 
+                onClick={toggleNotifications}
+                className={`p-2 transition-colors relative ${notificationsEnabled ? 'text-nexus-600 dark:text-nexus-400' : 'text-slate-400 dark:text-slate-500'}`}
+              >
+                <Bell className="w-5 h-5" />
+                {notificationsEnabled && <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>}
+              </button>
+
+              {user ? (
+                <div className="flex items-center gap-2 pl-2 border-l border-slate-200 dark:border-slate-700 ml-2">
+                  <div className="flex flex-col items-end">
+                    <span className="text-xs font-semibold text-slate-800 dark:text-white">{user.name}</span>
+                    <button onClick={logout} className="text-xs text-red-500 hover:underline">{t.nav.logout}</button>
+                  </div>
+                  <UserCircle className="w-8 h-8 text-slate-300 dark:text-slate-600" />
+                  <Link to="/saved" className="text-xs text-nexus-600 dark:text-nexus-400 hover:underline">{t.nav.saved}</Link>
+                </div>
+              ) : (
+                <button 
+                  onClick={() => navigate('/auth')}
+                  className="flex items-center gap-1 px-4 py-2 bg-nexus-600 text-white rounded-lg text-sm font-medium hover:bg-nexus-700 transition-colors shadow-sm"
+                >
+                  <LogIn className="w-4 h-4" />
+                  {t.nav.login}
+                </button>
+              )}
+            </div>
+
+            {/* Mobile menu button */}
+            <div className="xl:hidden flex items-center">
+               <button onClick={toggleTheme} className="p-2 text-slate-500 dark:text-slate-400 mr-1">
+                 {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+               </button>
+               <button onClick={toggleLanguage} className="p-2 mr-2 text-slate-500 dark:text-slate-400">
+                <span className="font-bold text-xs border border-slate-300 dark:border-slate-600 rounded px-1">{language === 'en' ? 'AR' : 'EN'}</span>
+              </button>
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white focus:outline-none"
+              >
+                {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Menu */}
+        {mobileMenuOpen && (
+          <div className="xl:hidden bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700">
+            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+              {navItems.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={({ isActive }) =>
+                    `block px-3 py-2 rounded-md text-base font-medium flex items-center gap-2 ${
+                      isActive 
+                      ? 'bg-nexus-50 dark:bg-nexus-900/50 text-nexus-600 dark:text-nexus-400' 
+                      : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
+                    }`
+                  }
+                >
+                  <item.icon className="w-5 h-5" />
+                  {item.label}
+                </NavLink>
+              ))}
+               <NavLink
+                  to="/ai-assistant"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={({ isActive }) =>
+                    `block px-3 py-2 rounded-md text-base font-medium flex items-center gap-2 ${
+                      isActive 
+                      ? 'bg-indigo-50 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400' 
+                      : 'text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30'
+                    }`
+                  }
+                >
+                  <Sparkles className="w-5 h-5" />
+                  {t.nav.aiAssistant}
+                </NavLink>
+              <div className="border-t border-slate-100 dark:border-slate-700 mt-2 pt-2">
+                 {user ? (
+                    <button onClick={logout} className="w-full text-left px-3 py-2 text-red-500 flex items-center gap-2">
+                        <LogOut className="w-5 h-5" /> {t.nav.logout}
+                    </button>
+                 ) : (
+                    <button onClick={() => {navigate('/auth'); setMobileMenuOpen(false);}} className="w-full text-left px-3 py-2 text-nexus-600 dark:text-nexus-400 flex items-center gap-2">
+                        <LogIn className="w-5 h-5" /> {t.nav.login}
+                    </button>
+                 )}
+              </div>
+            </div>
+          </div>
+        )}
+      </header>
+
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {children}
+      </main>
+    </div>
+  );
+};
+
+export default Layout;
