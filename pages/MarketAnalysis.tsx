@@ -4,15 +4,19 @@ import { useApp } from '../context/AppContext';
 import { TRANSLATIONS } from '../constants';
 import { MarketMetric } from '../types';
 import { analyzeMarketData } from '../services/geminiService';
-import { TrendingUp, TrendingDown, BrainCircuit, Activity, DollarSign, Bitcoin } from 'lucide-react';
+import { TrendingUp, TrendingDown, BrainCircuit, Activity, DollarSign, Bitcoin, Newspaper } from 'lucide-react';
 import AIChat from '../components/AIChat';
+import NewsCard from '../components/NewsCard';
 
 const MarketAnalysis: React.FC = () => {
-  const { language, marketIndices: initialIndices, theme } = useApp();
+  const { language, marketIndices: initialIndices, theme, latestNews } = useApp();
   const t = TRANSLATIONS[language];
   const [insight, setInsight] = useState<string>("Initializing market data stream and generating AI analysis...");
   const [activeTab, setActiveTab] = useState<'Indices' | 'Crypto' | 'Currency'>('Indices');
   
+  // Filter news for market/economy
+  const marketNews = latestNews.filter(n => n.category === 'Economy' || n.sector === 'Fintech');
+
   // Simulated Live Data State
   const [indices, setIndices] = useState(initialIndices);
   const [crypto, setCrypto] = useState<MarketMetric[]>([
@@ -73,7 +77,7 @@ const MarketAnalysis: React.FC = () => {
   );
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 pb-20">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
              <h1 className="text-3xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
                  <Activity className="w-8 h-8 text-nexus-600 dark:text-nexus-400" />
@@ -99,70 +103,95 @@ const MarketAnalysis: React.FC = () => {
             </div>
         </div>
 
-        {/* Tabs */}
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col md:flex-row transition-colors">
-            <div className="flex md:w-1/3 border-b md:border-b-0 md:border-r border-slate-200 dark:border-slate-700 flex-row md:flex-col">
-                {renderTabButton('Indices', <Activity className="w-4 h-4" />)}
-                {renderTabButton('Crypto', <Bitcoin className="w-4 h-4" />)}
-                {renderTabButton('Currency', <DollarSign className="w-4 h-4" />)}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Chart & Tabs - Takes 2/3 */}
+            <div className="lg:col-span-2 space-y-8">
+                {/* Tabs */}
+                <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col md:flex-row transition-colors">
+                    <div className="flex md:w-1/3 border-b md:border-b-0 md:border-r border-slate-200 dark:border-slate-700 flex-row md:flex-col">
+                        {renderTabButton('Indices', <Activity className="w-4 h-4" />)}
+                        {renderTabButton('Crypto', <Bitcoin className="w-4 h-4" />)}
+                        {renderTabButton('Currency', <DollarSign className="w-4 h-4" />)}
+                    </div>
+                    
+                    <div className="flex-1 p-6">
+                         <div className="flex justify-between items-center mb-6">
+                            <h3 className="font-bold text-xl text-slate-800 dark:text-white">{activeTab} Overview</h3>
+                        </div>
+                        <div className="space-y-4">
+                            {getCurrentData().map((item, idx) => (
+                                <div key={idx} className="flex justify-between items-center p-4 bg-slate-50 dark:bg-slate-700/50 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+                                    <div className="flex items-center gap-3">
+                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${item.trend === 'up' ? 'bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-400' : 'bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400'}`}>
+                                            {item.trend === 'up' ? <TrendingUp className="w-5 h-5" /> : <TrendingDown className="w-5 h-5" />}
+                                        </div>
+                                        <div>
+                                            <p className="font-bold text-slate-900 dark:text-white">{item.name}</p>
+                                            <p className="text-xs text-slate-500 dark:text-slate-400">{item.currency}</p>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="font-mono font-bold text-lg text-slate-900 dark:text-white">{item.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                                        <p className={`text-sm font-medium flex items-center justify-end gap-1 ${item.change >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                                            {item.change >= 0 ? '+' : ''}{item.change.toFixed(2)}%
+                                        </p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Visualization */}
+                <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm h-96 transition-colors">
+                    <h3 className="font-bold text-xl text-slate-800 dark:text-white mb-4">Volume Analysis</h3>
+                    <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={getCurrentData()}>
+                            <defs>
+                                <linearGradient id="colorVal" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.8}/>
+                                    <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0}/>
+                                </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme === 'dark' ? '#334155' : '#e2e8f0'} />
+                            <XAxis dataKey="name" stroke={theme === 'dark' ? '#94a3b8' : '#64748b'} fontSize={12} tickLine={false} axisLine={false} />
+                            <YAxis stroke={theme === 'dark' ? '#94a3b8' : '#64748b'} fontSize={12} tickLine={false} axisLine={false} domain={['auto', 'auto']} />
+                            <Tooltip 
+                                contentStyle={{ 
+                                    backgroundColor: theme === 'dark' ? '#1e293b' : '#fff', 
+                                    borderRadius: '8px', 
+                                    border: theme === 'dark' ? '1px solid #334155' : 'none', 
+                                    color: theme === 'dark' ? '#fff' : '#000',
+                                    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' 
+                                }}
+                                cursor={{fill: theme === 'dark' ? '#334155' : '#f1f5f9'}}
+                            />
+                            <Area type="monotone" dataKey="value" stroke="#0ea5e9" fillOpacity={1} fill="url(#colorVal)" />
+                        </AreaChart>
+                    </ResponsiveContainer>
+                </div>
             </div>
-            
-            <div className="flex-1 p-6">
-                 <div className="flex justify-between items-center mb-6">
-                    <h3 className="font-bold text-xl text-slate-800 dark:text-white">{activeTab} Overview</h3>
+
+            {/* Market News Section */}
+            <div className="lg:col-span-1 space-y-6">
+                <div className="flex items-center gap-2 mb-2">
+                    <Newspaper className="w-5 h-5 text-nexus-600" />
+                    <h3 className="font-bold text-lg text-slate-800 dark:text-white">Latest Market News</h3>
                 </div>
                 <div className="space-y-4">
-                    {getCurrentData().map((item, idx) => (
-                        <div key={idx} className="flex justify-between items-center p-4 bg-slate-50 dark:bg-slate-700/50 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
-                            <div className="flex items-center gap-3">
-                                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${item.trend === 'up' ? 'bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-400' : 'bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400'}`}>
-                                    {item.trend === 'up' ? <TrendingUp className="w-5 h-5" /> : <TrendingDown className="w-5 h-5" />}
-                                </div>
-                                <div>
-                                    <p className="font-bold text-slate-900 dark:text-white">{item.name}</p>
-                                    <p className="text-xs text-slate-500 dark:text-slate-400">{item.currency}</p>
-                                </div>
-                            </div>
-                            <div className="text-right">
-                                <p className="font-mono font-bold text-lg text-slate-900 dark:text-white">{item.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-                                <p className={`text-sm font-medium flex items-center justify-end gap-1 ${item.change >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                                    {item.change >= 0 ? '+' : ''}{item.change.toFixed(2)}%
-                                </p>
-                            </div>
+                    {marketNews.length > 0 ? (
+                        marketNews.slice(0, 3).map(item => (
+                            <NewsCard key={item.id} item={item} />
+                        ))
+                    ) : (
+                        <div className="text-center p-6 text-slate-500 bg-white dark:bg-slate-800 rounded-lg border border-dashed border-slate-300 dark:border-slate-700">
+                            No recent economy news.
                         </div>
-                    ))}
+                    )}
                 </div>
             </div>
         </div>
 
-        {/* Visualization */}
-        <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm h-96 transition-colors">
-            <h3 className="font-bold text-xl text-slate-800 dark:text-white mb-4">Volume Analysis</h3>
-            <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={getCurrentData()}>
-                    <defs>
-                        <linearGradient id="colorVal" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.8}/>
-                            <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0}/>
-                        </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme === 'dark' ? '#334155' : '#e2e8f0'} />
-                    <XAxis dataKey="name" stroke={theme === 'dark' ? '#94a3b8' : '#64748b'} fontSize={12} tickLine={false} axisLine={false} />
-                    <YAxis stroke={theme === 'dark' ? '#94a3b8' : '#64748b'} fontSize={12} tickLine={false} axisLine={false} domain={['auto', 'auto']} />
-                    <Tooltip 
-                        contentStyle={{ 
-                            backgroundColor: theme === 'dark' ? '#1e293b' : '#fff', 
-                            borderRadius: '8px', 
-                            border: theme === 'dark' ? '1px solid #334155' : 'none', 
-                            color: theme === 'dark' ? '#fff' : '#000',
-                            boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' 
-                        }}
-                        cursor={{fill: theme === 'dark' ? '#334155' : '#f1f5f9'}}
-                    />
-                    <Area type="monotone" dataKey="value" stroke="#0ea5e9" fillOpacity={1} fill="url(#colorVal)" />
-                </AreaChart>
-            </ResponsiveContainer>
-        </div>
         <AIChat contextData={`Page: Market Analysis. Viewing ${activeTab}.`} />
     </div>
   );

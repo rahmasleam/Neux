@@ -1,12 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { TRANSLATIONS } from '../constants';
 import NewsCard from '../components/NewsCard';
-import { Bookmark, Calendar, Mic, Mail, Users, ExternalLink } from 'lucide-react';
+import { Bookmark, Calendar, Mic, Mail, Users, ExternalLink, FileText, BrainCircuit, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const Saved: React.FC = () => {
-  const { language, favorites, toggleFavorite, latestNews, startupNews, events, podcasts, newsletters, partners } = useApp();
+  const { language, favorites, toggleFavorite, latestNews, startupNews, events, podcasts, newsletters, partners, savedAnalyses, deleteAnalysis } = useApp();
   const t = TRANSLATIONS[language];
+  const navigate = useNavigate();
+  const [showAnalyses, setShowAnalyses] = useState(true);
 
   // Aggregate all items
   const allItems = [
@@ -21,18 +24,92 @@ const Saved: React.FC = () => {
   const savedItems = allItems.filter(item => favorites.includes(item.id));
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 pb-20">
        <div>
           <h1 className="text-3xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Bookmark className="w-8 h-8 text-nexus-600 dark:text-nexus-400" />
               {t.nav.saved}
           </h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">{savedItems.length} items saved</p>
+          <p className="text-slate-500 dark:text-slate-400 mt-1">Your personal library of content and reports.</p>
        </div>
+
+       {/* Saved Podcast Analyses Section */}
+       {savedAnalyses.length > 0 && (
+           <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 shadow-sm">
+                <button 
+                    onClick={() => setShowAnalyses(!showAnalyses)}
+                    className="flex items-center justify-between w-full text-left"
+                >
+                    <div className="flex items-center gap-2">
+                         <BrainCircuit className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                         <h3 className="text-lg font-bold text-slate-900 dark:text-white">Podcast Reports ({savedAnalyses.length})</h3>
+                    </div>
+                    {showAnalyses ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
+                </button>
+                
+                {showAnalyses && (
+                    <div className="mt-6 overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider">
+                                    <th className="p-4 font-semibold">Podcast</th>
+                                    <th className="p-4 font-semibold">Episode</th>
+                                    <th className="p-4 font-semibold">Score</th>
+                                    <th className="p-4 font-semibold text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="text-sm">
+                                {savedAnalyses.map(analysis => (
+                                    <tr key={analysis.id} className="border-t border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                                        <td className="p-4 font-medium text-slate-900 dark:text-white">{analysis.podcastName}</td>
+                                        <td className="p-4 text-slate-700 dark:text-slate-300">{analysis.episodeTitle}</td>
+                                        <td className="p-4">
+                                            <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm ${
+                                                    analysis.score >= 8 ? 'bg-green-100 text-green-700' :
+                                                    analysis.score >= 5 ? 'bg-yellow-100 text-yellow-700' :
+                                                    'bg-red-100 text-red-700'
+                                                }`}>
+                                                    {analysis.score}
+                                            </span>
+                                        </td>
+                                        <td className="p-4 text-right flex justify-end gap-2 items-center">
+                                            <button 
+                                                onClick={() => {
+                                                    // Navigate to analysis page and pre-fill logic would be ideal, 
+                                                    // but for now we might just view it or need a Viewer. 
+                                                    // Currently PodcastAnalysis page loads it if passed via state or context, 
+                                                    // but simpler is to delete or open link.
+                                                    // For this demo, we just allow opening the original link.
+                                                    window.open(analysis.url, '_blank');
+                                                }}
+                                                className="text-xs bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-300 px-3 py-1.5 rounded hover:bg-indigo-100 transition-colors font-medium"
+                                            >
+                                                Open Link
+                                            </button>
+                                            <button 
+                                                onClick={(e) => { e.stopPropagation(); deleteAnalysis(analysis.id); }}
+                                                className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                                                title="Delete"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+           </div>
+       )}
+
+       <div className="border-t border-slate-200 dark:border-slate-700 my-8"></div>
+       
+       <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-4">Saved Content</h3>
 
        {savedItems.length === 0 ? (
            <div className="text-center py-20 bg-slate-50 dark:bg-slate-800 rounded-xl border border-dashed border-slate-300 dark:border-slate-700">
-              <p className="text-slate-500 dark:text-slate-400">No saved items yet.</p>
+              <p className="text-slate-500 dark:text-slate-400">No saved articles or events yet.</p>
            </div>
        ) : (
            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

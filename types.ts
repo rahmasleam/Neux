@@ -2,6 +2,19 @@ export type Language = 'en' | 'ar';
 export type Region = 'Global' | 'Egypt' | 'MENA' | 'All';
 export type Category = 'Latest' | 'Startups' | 'Events' | 'Podcasts' | 'Newsletters' | 'Market' | 'Partners';
 
+export interface PodcastAnalysis {
+  id: string;
+  url: string;
+  podcastName: string;
+  episodeTitle: string;
+  score: number;
+  reportContent?: string; // Optional generic content
+  summary?: string;
+  metrics?: { name: string; finding: string }[];
+  recommendation?: string;
+  date: string;
+}
+
 export interface User {
   id: string;
   name: string;
@@ -12,6 +25,7 @@ export interface User {
     regions: Region[];
   };
   savedChats: { id: string; title: string; messages: ChatMessage[]; date: string }[];
+  savedAnalyses: PodcastAnalysis[];
 }
 
 export interface BaseItem {

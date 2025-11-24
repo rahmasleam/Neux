@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { TRANSLATIONS } from '../constants';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { LogIn, UserPlus, AlertCircle, Camera, Mail, CheckCircle, ArrowLeft, Lock } from 'lucide-react';
 import { sendEmailVerification } from 'firebase/auth';
 import { auth } from '../services/firebase';
@@ -12,6 +12,10 @@ const Auth: React.FC = () => {
     const { login, signup, resetPassword, logout, language } = useApp();
     const t = TRANSLATIONS[language];
     const navigate = useNavigate();
+    const location = useLocation();
+    
+    // Check if there was a page we need to return to
+    const from = (location.state as any)?.from || '/';
     
     const [view, setView] = useState<AuthView>('login');
     const [name, setName] = useState('');
@@ -28,17 +32,8 @@ const Auth: React.FC = () => {
         setLoading(true);
         try {
             await login(email, password);
-            const user = auth.currentUser;
-            
-            if (user && !user.emailVerified) {
-                // User is not verified
-                await sendEmailVerification(user);
-                await logout(); // Ensure they are not logged in
-                setView('verify');
-            } else {
-                // User verified, proceed
-                navigate('/');
-            }
+            // Navigate back to where they came from
+            navigate(from);
         } catch (err: any) {
             handleAuthError(err);
         } finally {
@@ -61,9 +56,7 @@ const Auth: React.FC = () => {
             const user = auth.currentUser;
             
             if (user) {
-                // Trigger verification
                 await sendEmailVerification(user);
-                // Sign out immediately to prevent auto-login
                 await logout(); 
                 setView('verify');
             }
@@ -224,11 +217,6 @@ const Auth: React.FC = () => {
             <div>
                 <div className="flex justify-between items-center mb-1">
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Password</label>
-                    {view === 'login' && (
-                        <button type="button" onClick={() => setView('forgot')} className="text-xs text-nexus-600 dark:text-nexus-400 hover:underline">
-                            Forgot password?
-                        </button>
-                    )}
                 </div>
                 <input 
                     type="password" 
@@ -237,6 +225,13 @@ const Auth: React.FC = () => {
                     className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-nexus-500 outline-none bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
                     required 
                 />
+                {view === 'login' && (
+                    <div className="flex justify-end mt-1">
+                        <button type="button" onClick={() => setView('forgot')} className="text-xs text-nexus-600 dark:text-nexus-400 hover:underline">
+                            Forgot password?
+                        </button>
+                    </div>
+                )}
             </div>
             
             {view === 'signup' && (

@@ -1,11 +1,11 @@
 import React from 'react';
 import { NavLink, Link, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Newspaper, Rocket, Calendar, Mic, Mail, BarChart2, Users, UserCircle, Bell, LogIn, LogOut, Menu, X, Sparkles, Sun, Moon, Link as LinkIcon } from 'lucide-react';
+import { LayoutDashboard, Newspaper, Rocket, Calendar, Mic, Mail, BarChart2, Users, UserCircle, Bell, LogIn, LogOut, Menu, X, Sparkles, Sun, Moon, Link as LinkIcon, ShieldCheck, BrainCircuit } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { TRANSLATIONS } from '../constants';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, language, toggleLanguage, logout, notificationsEnabled, toggleNotifications, theme, toggleTheme } = useApp();
+  const { user, isAdmin, language, toggleLanguage, logout, notificationsEnabled, toggleNotifications, theme, toggleTheme } = useApp();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const navigate = useNavigate();
   const t = TRANSLATIONS[language];
@@ -15,11 +15,15 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     { to: '/startups', label: t.nav.startups, icon: Rocket },
     { to: '/events', label: t.nav.events, icon: Calendar },
     { to: '/podcasts', label: t.nav.podcasts, icon: Mic },
+    { to: '/podcast-analysis', label: 'Podcast Analysis', icon: BrainCircuit },
     { to: '/newsletters', label: t.nav.newsletters, icon: Mail },
     { to: '/market', label: t.nav.market, icon: BarChart2 },
     { to: '/partners', label: t.nav.partners, icon: Users },
-    // Resources removed from nav as per request (available in code only)
   ];
+
+  if (isAdmin) {
+      navItems.push({ to: '/admin', label: t.nav.admin, icon: ShieldCheck });
+  }
 
   return (
     <div className={`min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white transition-colors duration-200 ${language === 'ar' ? 'rtl' : 'ltr'}`} dir={language === 'ar' ? 'rtl' : 'ltr'}>
@@ -103,7 +107,10 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               {user ? (
                 <div className="flex items-center gap-2 pl-2 border-l border-slate-200 dark:border-slate-700 ml-2">
                   <div className="flex flex-col items-end">
-                    <span className="text-xs font-semibold text-slate-800 dark:text-white">{user.name}</span>
+                    <span className="text-xs font-semibold text-slate-800 dark:text-white flex items-center gap-1">
+                        {user.name}
+                        {isAdmin && <ShieldCheck className="w-3 h-3 text-nexus-600" />}
+                    </span>
                     <button onClick={logout} className="text-xs text-red-500 hover:underline">{t.nav.logout}</button>
                   </div>
                   <UserCircle className="w-8 h-8 text-slate-300 dark:text-slate-600" />

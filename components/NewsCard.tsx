@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { ExternalLink, Bookmark, Share2, Globe, Bot } from 'lucide-react';
+import { ExternalLink, Bookmark, Globe, Bot } from 'lucide-react';
 import { NewsItem } from '../types';
 import { useApp } from '../context/AppContext';
 import { generateSummary, translateText } from '../services/geminiService';
 import { TRANSLATIONS } from '../constants';
+import { useNavigate } from 'react-router-dom';
 
 interface NewsCardProps {
   item: NewsItem;
@@ -16,29 +17,47 @@ const NewsCard: React.FC<NewsCardProps> = ({ item }) => {
   const [translatedTitle, setTranslatedTitle] = useState<string | null>(null);
   const t = TRANSLATIONS[language];
   const isSaved = favorites.includes(item.id);
+  const navigate = useNavigate();
 
-  const handleSummary = async () => {
+  const handleSummary = async (e: React.MouseEvent) => {
+    e.stopPropagation();
     setIsSummarizing(true);
     const result = await generateSummary(`${item.title}\n${item.description}`, language);
     setSummary(result);
     setIsSummarizing(false);
   };
 
-  const handleTranslate = async () => {
-      // Simulate toggle if already translated
+  const handleTranslate = async (e: React.MouseEvent) => {
+      e.stopPropagation();
       if (translatedTitle) {
           setTranslatedTitle(null);
           return;
       }
-      const target = language === 'ar' ? 'ar' : 'en'; 
       const result = await translateText(item.title, 'ar');
       setTranslatedTitle(result);
   }
 
+  const handleFavorite = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      toggleFavorite(item.id);
+  }
+
+  const handleReadClick = () => {
+      navigate(`/article/${item.id}`);
+  }
+
+  const handleExternalLink = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      window.open(item.url, '_blank', 'noopener,noreferrer');
+  }
+
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden hover:shadow-md transition-all duration-200 flex flex-col h-full">
+    <div 
+        onClick={handleReadClick}
+        className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden hover:shadow-md transition-all duration-200 flex flex-col h-full cursor-pointer group"
+    >
       <div className="relative h-48 overflow-hidden">
-        <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover transition-transform hover:scale-105 duration-500" />
+        <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-500" />
         <span className={`absolute top-3 ${language === 'ar' ? 'right-3' : 'left-3'} px-2 py-1 bg-black/60 text-white text-xs rounded-md backdrop-blur-sm`}>
           {item.category}
         </span>
@@ -55,7 +74,7 @@ const NewsCard: React.FC<NewsCardProps> = ({ item }) => {
            <span className="text-xs text-slate-400 dark:text-slate-500">{item.date}</span>
         </div>
 
-        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2 leading-tight">
+        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2 leading-tight group-hover:text-nexus-600 dark:group-hover:text-nexus-400 transition-colors">
           {language === 'ar' && translatedTitle ? translatedTitle : (language === 'ar' && item.titleAr ? item.titleAr : item.title)}
         </h3>
 
@@ -74,7 +93,7 @@ const NewsCard: React.FC<NewsCardProps> = ({ item }) => {
 
         <div className="mt-auto pt-4 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between">
            <div className="flex gap-2">
-              <button onClick={() => toggleFavorite(item.id)} className={`p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors ${isSaved ? 'text-nexus-600 dark:text-nexus-400 fill-current' : 'text-slate-400 dark:text-slate-500'}`}>
+              <button onClick={handleFavorite} className={`p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors ${isSaved ? 'text-nexus-600 dark:text-nexus-400 fill-current' : 'text-slate-400 dark:text-slate-500'}`}>
                 <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-current' : ''}`} />
               </button>
               <button onClick={handleTranslate} className="p-2 text-slate-400 dark:text-slate-500 hover:text-nexus-600 dark:hover:text-nexus-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors" title={t.common.aiTranslate}>
@@ -90,15 +109,13 @@ const NewsCard: React.FC<NewsCardProps> = ({ item }) => {
               </button>
            </div>
 
-           <a 
-             href={item.url} 
-             target="_blank" 
-             rel="noreferrer" 
+           <button 
+             onClick={handleExternalLink}
              className="inline-flex items-center gap-1 text-sm font-medium text-nexus-600 dark:text-nexus-400 hover:text-nexus-700 dark:hover:text-nexus-300 transition-colors"
            >
              {t.common.readMore}
              <ExternalLink className="w-3 h-3" />
-           </a>
+           </button>
         </div>
       </div>
     </div>
