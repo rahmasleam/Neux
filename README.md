@@ -20,6 +20,7 @@ View your app in AI Studio: https://ai.studio/apps/drive/11stWob4UssFfP75-S7iqp3
    `npm run dev`
 
 # My App link after deployment 🔗
-neux-sxxp.vercel.app
-neux-sxxp-git-main-rahma-sleams-projects.vercel.app
-neux-sxxp-nzw1kxwxg-rahma-sleams-projects.vercel.app
+
+1. neux-sxxp.vercel.app
+2. neux-sxxp-git-main-rahma-sleams-projects.vercel.app
+3. neux-sxxp-nzw1kxwxg-rahma-sleams-projects.vercel.app
