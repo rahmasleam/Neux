@@ -1,5 +1,6 @@
+// Layout.tsx (محدث)
 import React from 'react';
-import { NavLink, Link, useNavigate } from 'react-router-dom';
+import { NavLink, Link, useNavigate, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Newspaper, Rocket, Calendar, Mic, Mail, BarChart2, Users, UserCircle, Bell, LogIn, LogOut, Menu, X, Sparkles, Sun, Moon, Link as LinkIcon, ShieldCheck, BrainCircuit } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { TRANSLATIONS } from '../constants';
@@ -8,7 +9,21 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, isAdmin, language, toggleLanguage, logout, notificationsEnabled, toggleNotifications, theme, toggleTheme } = useApp();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const t = TRANSLATIONS[language];
+
+  // امنعي scrolling لما الموبايل مينو مفتوح
+  React.useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [mobileMenuOpen]);
 
   const navItems = [
     { to: '/', label: t.nav.latest, icon: Newspaper },
@@ -22,14 +37,14 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   ];
 
   if (isAdmin) {
-      navItems.push({ to: '/admin', label: t.nav.admin, icon: ShieldCheck });
+    navItems.push({ to: '/admin', label: t.nav.admin, icon: ShieldCheck });
   }
 
   return (
     <div className={`min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white transition-colors duration-200 ${language === 'ar' ? 'rtl' : 'ltr'}`} dir={language === 'ar' ? 'rtl' : 'ltr'}>
       
       {/* Navbar */}
-      <header className="sticky top-0 z-40 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 shadow-sm transition-colors duration-200">
+      <header className="sticky top-0 z-50 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 shadow-sm transition-colors duration-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             
@@ -47,7 +62,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
             {/* Desktop Nav */}
             <nav className="hidden lg:flex flex-1 justify-center mx-4">
-              <div className="flex items-center space-x-1 rtl:space-x-reverse max-w-full overflow-x-auto">
+              <div className="flex items-center space-x-1 rtl:space-x-reverse max-w-full overflow-x-auto scrollbar-hide">
                 {navItems.map((item) => (
                   <NavLink
                     key={item.to}
@@ -151,7 +166,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="lg:hidden bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700">
+          <div className="lg:hidden fixed inset-0 z-40 bg-white dark:bg-slate-800 top-16 overflow-y-auto">
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
               {navItems.map((item) => (
                 <NavLink
