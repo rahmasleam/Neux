@@ -68,8 +68,8 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                   className={({ isActive }) =>
                     `px-3 py-2 rounded-md text-sm font-medium transition-colors mx-1 flex items-center gap-1 ${
                       isActive 
-                      ? 'bg-indigo-50 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400' 
-                      : 'text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30'
+                      ? 'bg-nexus-600/10 dark:bg-nexus-400/20 text-nexus-600 dark:text-nexus-300 font-semibold' 
+                      : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white'
                     }`
                   }
                 >
